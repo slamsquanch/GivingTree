@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.example.zac.givingtreeapp.classes.Day;
 
@@ -16,13 +17,14 @@ import java.util.ArrayList;
 
 public class DBHelper extends SQLiteOpenHelper {
     // If you change the database schema, you must increment the database version.
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 3;
     public static final String DATABASE_NAME = "GivingTree.db";
     public static final String DATABASE_ID = "id";
+    public static final String MESSAGE_ID = "msgID";
     public static final String DAY_TABLE_NAME = "DayTable";
     public static final String MSG_TABLE_NAME = "MessageTable";
     public static final String COUNTER_TABLE_NAME = "CountTable";
-    public static final String[] DAY_COLUMN_STRING = {"id", "message1", "message2", "message3", "send_status", "open_status", ""};
+    public static final String[] DAY_COLUMN_STRING = {"id", "msgID", "message", "day"};
     private static DBHelper database = null;
 
 
@@ -38,12 +40,9 @@ public class DBHelper extends SQLiteOpenHelper {
         CREATE_TABLE = "CREATE TABLE " + DAY_TABLE_NAME +
                 "(" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "message1 TEXT," +
-                "message2 TEXT," +
-                "message3 TEXT," +
-                "send_status TEXT," +
-                "open_status DOUBLE," +
-                "longitude DOUBLE" +
+                "msgID INTEGER," +
+                "message TEXT," +
+                "day INTEGER" +
                 ")";
         db.execSQL(CREATE_TABLE);
     }
@@ -70,53 +69,53 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
 
-    // insert pic
-    public void addDay(Day day, String sendStat, String openStat) {
+    // Add message to the database
+    public void addMessage(Day day) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        //values.put("id", img.getID());
-        values.put("message1", day.getMessage1());
-        values.put("message2", day.getMessage2());
-        values.put("message3", day.getMessage3());
-        values.put("send_status", sendStat);
-        values.put("open_status", openStat);
+        Log.e("DBhelper", "" + day.getID());     // msgID WORKS!... here AND works when I getCalendar in main
+        values.put("msgID", day.getID());
+        Log.e("DBhelper", "" +day.getMessage());  // msg WORKS!...  here but is null when I getCalendar in main
+        values.put("message", day.getMessage());
+        Log.e("DBhelper", "" + day.getDay());    // day WORKS!...here but is 0 when I getCalendar in main
+        values.put("day", day.getDay());
         db.insert(DAY_TABLE_NAME, null, values);
         db.close();
     }
 
 
-    // delete pic
-    public void deletePhoto(String id) {
+    // delete message of day
+    public void deleteMessage(int msgID) {
         SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(DAY_TABLE_NAME, DATABASE_ID + " = ?",
-                new String[] {id});
+        db.delete(DAY_TABLE_NAME, MESSAGE_ID + " = ",
+                new String[] {("" + msgID)});
         db.close();
     }
 
 
-    // retrieve pic
-    public Day getDay(String id) {
+    // get message of day
+    public Day getMessage(int day) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(
                 DAY_TABLE_NAME,
                 DAY_COLUMN_STRING,
-                DATABASE_ID + "=?",
-                new String[] {id},
+                "day" + "= ?",
+                new String[] {("" + day)},
                 null,
                 null,
                 null,
                 null);
         if (cursor != null)
             cursor.moveToFirst();
-        Day day = new Day();
-        populate(day, cursor);
+        Day d = new Day();
+        populate(d, cursor);
 
         db.close();
-        return day;
+        return d;
     }
 
 
-    // get all the photos
+    // get all the days
     public ArrayList<Day> getCalendar() {
         ArrayList<Day> days = new ArrayList<>();
         String selectQuery = "SELECT * FROM " + DAY_TABLE_NAME + " ORDER BY ID ASC";
@@ -136,13 +135,27 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
 
+    public int getLastDay(){
+        int lastDay = 0;
+        SQLiteDatabase db = this.getWritableDatabase();
+        String selectQuery = "SELECT * FROM " + DAY_TABLE_NAME + " ORDER BY cast(day as REAL) DESC";
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        if (cursor.moveToFirst()) {
+            do {
+                if (cursor.getInt(3) > lastDay)
+                    lastDay = cursor.getInt(3);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+        return lastDay;
+    }
+
 
     private void populate(Day day, Cursor cursor) {
-        day.setMessage1(cursor.getString(0));
-        day.setMessage2(cursor.getString(1));
-        day.setMessage3(cursor.getString(2));
-        day.setSendStatus(cursor.getString(3));
-        day.setOpenStatus(cursor.getString(4));
+        day.setID(cursor.getInt(1));
+        day.setMessage(cursor.getString(2));
+        day.setDay(cursor.getInt(3));
     }
 
 }
