@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "487446667646",
+    "firebase_url": "https://givingtreeapp-470fc.firebaseio.com",
+    "project_id": "givingtreeapp-470fc",
+    "storage_bucket": "givingtreeapp-470fc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:487446667646:android:8fd6991b2edd8def",
+        "android_client_info": {
+          "package_name": "com.example.zac.givingtreeapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "487446667646-bepgthl0ecl4i290cbat2imnprjicijq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADYUz6PMIDkUqDuXeYwK-yLPrNqsCTalM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
