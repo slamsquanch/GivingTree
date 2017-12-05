@@ -21,6 +21,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "GivingTree.db";
     public static final String DATABASE_ID = "id";
     public static final String MESSAGE_ID = "msgID";
+    public static final String MESSAGE_DAY = "day";
     public static final String DAY_TABLE_NAME = "DayTable";
     public static final String MSG_TABLE_NAME = "MessageTable";
     public static final String COUNTER_TABLE_NAME = "CountTable";
@@ -85,10 +86,18 @@ public class DBHelper extends SQLiteOpenHelper {
 
 
     // delete message of day
-    public void deleteMessage(int msgID) {
+    /*public void deleteMessage(int msgID) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(DAY_TABLE_NAME, MESSAGE_ID + " = ",
                 new String[] {("" + msgID)});
+        db.close();
+    }*/
+
+    // delete message of day
+    public void deleteMessage(int day) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(DAY_TABLE_NAME, MESSAGE_DAY + " =? ",
+                new String[] {("" + day)});
         db.close();
     }
 
@@ -151,6 +160,25 @@ public class DBHelper extends SQLiteOpenHelper {
         return lastDay;
     }
 
+
+    public String getDay(int day) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String selectQuery = "SELECT * FROM " + DAY_TABLE_NAME + " ORDER BY cast(day as REAL) ASC";
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        String message;
+        if (cursor.moveToFirst()) {
+            while (cursor.moveToNext()) {
+                if (cursor.getInt(3) == day) {
+                    message = cursor.getString(2);
+                    Log.e("DBhelperGetMessage", message);
+                    return message;
+                }
+            }
+        }
+        Log.e("DBhelperGetMessage", "poo");
+
+        return "poo";
+    }
 
     private void populate(Day day, Cursor cursor) {
         day.setID(cursor.getInt(1));
