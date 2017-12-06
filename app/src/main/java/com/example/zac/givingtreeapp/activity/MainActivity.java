@@ -1,7 +1,9 @@
 package com.example.zac.givingtreeapp.activity;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,6 +12,7 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.zac.givingtreeapp.classes.Day;
@@ -74,6 +77,9 @@ public class MainActivity extends AppCompatActivity {
 
     private int today;
 
+    private int buttons[] = new int[24];
+
+
     // Messages are already stored and sent from my PHP server script,
     // but this array is used as local backup for swapping current day's task.
     private String extraMessages[] = {
@@ -100,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
             "Donate your old eyeglasses so someone else can use them",
             "Bring delicious snacks or dessert to work for everyone",
             "Let someone go in front of you in line who only has a few items",
-            "Talk to the shy person are work or school",
+            "Talk to the shy person at work or school",
             "Cook a meal or do a load of laundry for a friend who just had a baby or is going through a difficult time",
             "Surprise a neighbor with freshly baked cookies or treats",
             "Compliment at laast three people today",
@@ -131,29 +137,17 @@ public class MainActivity extends AppCompatActivity {
     };
 
 
+    private Context context;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        context = this;
+        today = DBHelper.getInstance(this).getLastDay();
 
         setContentView(R.layout.activity_main);
+        //loadButtonImages();
         instanceState = savedInstanceState;
-        // LOCAL NOTIFICATION STUFF
-        /*Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        int curHr = calendar.get(Calendar.HOUR_OF_DAY);
-        if (curHr >= 13) {
-            // Since current hour is over 14, setting the date to the next day.
-            calendar.add(Calendar.DATE, 1);
-        }
-        calendar.set(Calendar.HOUR_OF_DAY,8);
-        calendar.set(Calendar.MINUTE,44);
-        calendar.set(Calendar.SECOND, 50);
-        Intent intent = new Intent(getApplicationContext(), NotificationReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(),0,intent,PendingIntent.FLAG_UPDATE_CURRENT);
-        if (savedInstanceState == null) {
-            AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), 24 * 60 * 60 * 1000, pendingIntent);
-        }*/
 
         fcmToken = FirebaseInstanceId.getInstance().getToken();
         Log.e("MYTAG", "This is your Firebase token : " + fcmToken);
@@ -168,6 +162,16 @@ public class MainActivity extends AppCompatActivity {
 
         MainActivity.mDatabase.child("tokens").updateChildren(add);
 
+        //GET ALL BUTTONS
+        /*for (int i = 1; i < 24; i++) {
+            int id = getResources().getIdentifier("button"+i, "id", getPackageName());
+            Log.e("BUTTONS", "button" + i);
+            buttons[i] = id;
+            //Log.e("BUTTONS", "" + id);
+            //buttons[i] = (Button) findViewById(id);
+        }*/
+
+
         ArrayList<Day> list = DBHelper.getInstance(this).getCalendar();
         Log.e("LIST_SIZE", list.size() + "");
         if (list != null) {
@@ -180,8 +184,8 @@ public class MainActivity extends AppCompatActivity {
                 //Toast.makeText(this, "SQLite Msg: " + d.getMessage(), Toast.LENGTH_LONG).show();
                 //Toast.makeText(this, "SQLite Day: " + d.getDay() + "", Toast.LENGTH_LONG).show();
             }
-            Toast.makeText(this, "SQLite Day5: " + list.get(4).getDay() + "", Toast.LENGTH_LONG).show();
-            Toast.makeText(this, "SQLite Day5 Msg: " + list.get(4).getMessage(), Toast.LENGTH_LONG).show();
+            //Toast.makeText(this, "SQLite Day5: " + list.get(4).getDay() + "", Toast.LENGTH_LONG).show();
+            //Toast.makeText(this, "SQLite Day5 Msg: " + list.get(4).getMessage(), Toast.LENGTH_LONG).show();
         } else {
             Log.e("SQLite",  "NULL LIST");
         }
@@ -197,13 +201,13 @@ public class MainActivity extends AppCompatActivity {
                 String tmp = bundle.getString("msgID");
                 msgID = Integer.parseInt(tmp);
             //Toast.makeText(this, "checking msg", Toast.LENGTH_LONG).show();
-            //Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
            // Toast.makeText(this, "msgID: " + msgID, Toast.LENGTH_LONG).show();  // WORKS!...
 
             //Log.e("msgID", msgID + "");  // WORKS!...
             //Log.e("msg", msg);         // WORKS!...
             // Add to local app database
-            today = DBHelper.getInstance(this).getLastDay();
+            /*today = DBHelper.getInstance(this).getLastDay();
             Log.e("DAY", today + "");
             today++;
             Log.e("DAY++", today + "");
@@ -216,11 +220,31 @@ public class MainActivity extends AppCompatActivity {
             }
             else {
                 Toast.makeText(this, "MERRY CHRISTMAS! \n Enjoy spending time with your loved ones! " + msgID, Toast.LENGTH_LONG).show();
-            }
+            }*/
+            storeMessage(msgID, msg);
+            //LOAD BUTTON STATES
         }
         //Log.e("data: ", msg);
     }
 
+
+    public void storeMessage(int msgID, final String msg) {
+        today = DBHelper.getInstance(this).getLastDay();
+        Log.e("DAY", today + "");
+        today++;
+        Log.e("DAY++", today + "");
+        if (today < 25) {
+            DBHelper.getInstance(this).addMessage(
+                    new Day(msgID, msg, today));
+            Log.e("DAY++", today + "");
+            Log.e("Main", "Message ADDED SUCCESSFULLY TO DB");
+                    swapDialog(msg, today);
+
+        }
+        else {
+            Toast.makeText(this, "MERRY CHRISTMAS! \n Enjoy spending time with your loved ones! " + msgID, Toast.LENGTH_LONG).show();
+        }
+    }
 
     public void onButtonClick(View view) {
         String tag = view.getTag().toString();
@@ -231,44 +255,51 @@ public class MainActivity extends AppCompatActivity {
         int day = Integer.parseInt(tokens[1]);
         setMessageToDisplay(DBHelper.getInstance(this).getDay(day));
 
+        Log.e("Today", ""+today );
+        if (day == today) {
+            swapDialog(messageToDisplay, day);
+        }
         viewMessage(messageToDisplay, day);
 
     }
 
 
     private void viewMessage(final String msg, final int day) {
+        //runOnUiThread(new Runnable() {
+           // public void run() {
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                builder.setTitle("Dec. " + day);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Dec. " + day);
+                builder.setMessage(msg);
 
-        builder.setMessage(msg);
+                // Set up the buttons
+                builder.setPositiveButton("DONE!", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {}
+                });
 
-        // Set up the buttons
-        builder.setPositiveButton("DONE!", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {}
-        });
+                builder.setNeutralButton("Swap Task", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        swapMessage(day);
+                    }
+                });
 
-        builder.setNeutralButton("Swap Task", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                swapMessage(day);
-            }
-        });
+                builder.setNeutralButton("Set Reminder!", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        setReminder(msg);
+                    }
+                });
 
-        builder.setNeutralButton("Set Reminder!", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                setReminder(msg);
-            }
-        });
+                builder.setNegativeButton("Close", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {}
+                });
 
-        builder.setNegativeButton("Close", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {}
-        });
-
-        builder.show();
+                builder.show();
+        //    }
+        //});
     }
 
 
@@ -277,17 +308,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void swapMessage(int day) {
+    public void swapMessage(int day) {
         // delete currently stored message for this day.
         DBHelper.getInstance(this).deleteMessage(day);
         Log.e("SWAP", "OG message deleted");
 
         // get a random new message and add to local database for this day
         Random rand = new Random();
-        int index = rand.nextInt(50 - 0 + 1) + 0;
+        int index = rand.nextInt(extraMessages.length - 0 + 1) + 0;
         DBHelper.getInstance(this).addMessage(new Day(index, extraMessages[index], day));
         Log.e("SWAP", "new message added");
         Log.e("SWAP", extraMessages[index]);
+    }
+
+    public void setExtraMessages(String msg[]) {
+        extraMessages = msg;
+    }
+
+    public int getExtraMsgSize() {
+        return extraMessages.length;
     }
 
 
@@ -321,6 +360,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void setReminder(String msg) {
+
         // LOCAL NOTIFICATION STUFF
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(System.currentTimeMillis());
@@ -333,47 +373,73 @@ public class MainActivity extends AppCompatActivity {
         }
 
         calendar.set(Calendar.HOUR_OF_DAY, curHr);
-        calendar.set(Calendar.MINUTE, curMin);
-        calendar.set(Calendar.SECOND, curSec + 5);
+        calendar.set(Calendar.MINUTE, 24);
+        calendar.set(Calendar.SECOND, 30);
+
+        long futureInMillis = SystemClock.elapsedRealtime() + 5000;
         Intent intent = new Intent(getApplicationContext(), NotificationReceiver.class);
-        Intent intent1 = new Intent("data");
+        /*Intent intent1 = new Intent("data");
         intent1.putExtra("TITLE", "GivingTree Reminder!");
         intent1.putExtra("MSG", msg);
-        sendBroadcast(intent1);
+        sendBroadcast(intent1);*/
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(),0,intent,PendingIntent.FLAG_UPDATE_CURRENT);
         if (instanceState == null) {
+            Log.e("reminder", "here!");
             AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), 24 * 60 * 60 * 1000, pendingIntent);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis() + 10000, AlarmManager.INTERVAL_DAY, pendingIntent);
         }
     }
 
 
 
-    private void swapDialog(final String msg, final int day) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Dec. " + day);
+    public void swapDialog(final String msg, final int day) {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                builder.setTitle("Dec. " + day);
 
-        builder.setMessage(msg);
+                builder.setMessage(msg);
 
-        // Set up the buttons
-        builder.setPositiveButton("DONE!", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {}
-        });
+                // Set up the buttons
+                builder.setPositiveButton("DONE!", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {}
+                });
 
-        builder.setNeutralButton("Swap Task", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                swapMessage(day);
+                builder.setNeutralButton("Swap Task", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        swapMessage(day);
+                    }
+                });
+
+                builder.setNegativeButton("Close", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {}
+                });
+
+                builder.show();
             }
         });
+    }
 
-        builder.setNegativeButton("Close", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {}
-        });
 
-        builder.show();
+    private void loadButtonImages() {
+        ArrayList<Day> list = DBHelper.getInstance(this).getCalendar();
+        Log.e("LIST_SIZE", list.size() + "");
+        String id = "b";
+        /*if (list != null) {
+            Log.e("LoadButtons", "" + today);
+            for (int i = today; i < 24; i++) {
+                id = "button" + i;
+                Button button = (Button)findViewById(R.id.button16);
+                //button.setBackgroundResource(R.drawable.button2);
+                button.setEnabled(true);
+            }
+            //setContentView(R.layout.activity_main);
+        }
+        else
+            Log.e("LoadButtons", "list is null"); */
     }
 }

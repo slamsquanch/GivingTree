@@ -127,7 +127,7 @@ public class DBHelper extends SQLiteOpenHelper {
     // get all the days
     public ArrayList<Day> getCalendar() {
         ArrayList<Day> days = new ArrayList<>();
-        String selectQuery = "SELECT * FROM " + DAY_TABLE_NAME + " ORDER BY ID ASC";
+        String selectQuery = "SELECT * FROM " + DAY_TABLE_NAME + " ORDER BY day ASC";
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
         if (cursor.moveToFirst()) {
@@ -177,7 +177,7 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         Log.e("DBhelperGetMessage", "poo");
 
-        return "poo";
+        return "message locked";
     }
 
     private void populate(Day day, Cursor cursor) {

@@ -10,19 +10,11 @@ import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.example.zac.givingtreeapp.activity.MainActivity;
-import com.example.zac.givingtreeapp.classes.Day;
-import com.example.zac.givingtreeapp.database.DBHelper;
-import com.firebase.jobdispatcher.Constraint;
-import com.firebase.jobdispatcher.FirebaseJobDispatcher;
-import com.firebase.jobdispatcher.GooglePlayDriver;
-import com.firebase.jobdispatcher.Job;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
-import java.util.Map;
 import java.util.Random;
 
 /**
@@ -145,7 +137,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_star_icon)
                 .setLargeIcon(BitmapFactory.decodeResource(this.getResources(),
-                        R.mipmap.ic_launcher))
+                        R.drawable.giving_tree_icon128))
                 .setContentTitle(title)
                 .setContentText(message)
                 .setAutoCancel(true)
